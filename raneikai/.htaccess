@@ -1,0 +1,5 @@
+AuthUserFile /home/users/a/s/h/ashikaga3yoshimitsu/raneikai/.htpasswd
+AuthGroupFile /dev/null
+AuthName "Please input your ID and PASSWORD"
+AuthType Basic
+require valid-user
