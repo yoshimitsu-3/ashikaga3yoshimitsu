@@ -178,39 +178,46 @@ window.addEventListener('DOMContentLoaded', () => {
 // 1. 既存の表（テーブル）の各行に「正解」「不正解」ボタンを自動追加する関数
 function setupTableButtons() {
     const rows = document.querySelectorAll('table tr');
-    let isHeader = true;
+    let isHeaderProcessed = false;
 
-    rows.forEach((row, index) => {
-        const cells = row.querySelectorAll('td');
+    rows.forEach((row) => {
+        // thタグ、またはtdタグのいずれかを取得
+        const cells = row.querySelectorAll('th, td');
         
-        // ヘッダー行（「番号」「問題」「解答」）には「チェック」という見出し列を追加
-        if (isHeader && cells.length >= 3) {
-            const td = document.createElement('td'); // 💡 th から td に変更して周りと統一
-            td.textContent = "チェック";
-            td.style.padding = "8px";
-            td.style.backgroundColor = "#eee";     // 💡 周りの薄いグレーに合わせる
-            td.style.whiteSpace = "nowrap";         // 💡 絶対に改行させない
-            td.style.verticalAlign = "middle";      // 💡 縦の位置を中央に揃える
-            td.style.textAlign = "center";          // 💡 文字を中央寄せにする
-            td.style.fontWeight = "bold";           // 💡 周りに合わせて太字にする
-            row.appendChild(td);
-            isHeader = false;
-            return;
-        }
-
-
-        // 問題が書かれている行に対する処理
         if (cells.length >= 3) {
+            // 💡 最初の3つのセルのいずれかに「番号」または「問題」という文字が含まれていたら、そこをヘッダー行とする
+            const isHeaderRow = Array.from(cells).slice(0, 3).some(cell => {
+                const text = cell.textContent.trim();
+                return text === "番号" || text === "問題" || text === "解答";
+            });
+
+            if (isHeaderRow && !isHeaderProcessed) {
+                // 「解答」の真横に見出しを追加
+                const td = document.createElement('td');
+                td.textContent = "チェック";
+                td.style.padding = "8px";
+                td.style.backgroundColor = "#eee";
+                td.style.whiteSpace = "nowrap";
+                td.style.verticalAlign = "middle";
+                td.style.textAlign = "center";
+                td.style.fontWeight = "bold";
+                row.appendChild(td);
+                isHeaderProcessed = true;
+                return;
+            }
+
+            // 問題が書かれている通常のデータ行に対する処理
             const qText = cells[1].textContent.trim();
             const aText = cells[2].textContent.trim();
 
-            if (qText === "問題" || qText === "") return;
+            if (qText === "" || isHeaderRow) return;
 
             // ボタンを入れる新しいセル（列）を作成
             const actionCell = document.createElement('td');
             actionCell.style.textAlign = "center";
             actionCell.style.padding = "5px";
             actionCell.style.whiteSpace = "nowrap";
+            actionCell.style.verticalAlign = "middle"; // 💡 縦位置を中央に揃える
 
             // 「⭕」ボタン
             const cBtn = document.createElement('button');
@@ -224,7 +231,7 @@ function setupTableButtons() {
 
             // ボタンをクリックした時の挙動
             cBtn.addEventListener('click', () => {
-                row.style.backgroundColor = "#e8f8f5"; // 正解は薄い緑
+                row.style.backgroundColor = "#e8f8f5";
                 cBtn.style.background = "#5cb85c";
                 cBtn.style.color = "#fff";
                 wBtn.style.background = "#fff";
@@ -233,7 +240,7 @@ function setupTableButtons() {
             });
 
             wBtn.addEventListener('click', () => {
-                row.style.backgroundColor = "#fdf2f2"; // 不正解は薄い赤
+                row.style.backgroundColor = "#fdf2f2";
                 wBtn.style.background = "#d9534f";
                 wBtn.style.color = "#fff";
                 cBtn.style.background = "#fff";
