@@ -183,16 +183,21 @@ function setupTableButtons() {
     rows.forEach((row, index) => {
         const cells = row.querySelectorAll('td');
         
-        // ヘッダー行（「番号」「問題」「解答」）には「状態」という見出し列を追加
+        // ヘッダー行（「番号」「問題」「解答」）には「チェック」という見出し列を追加
         if (isHeader && cells.length >= 3) {
-            const th = document.createElement('th');
-            th.textContent = "チェック";
-            th.style.padding = "8px";
-            th.style.backgroundColor = "#eee";
-            row.appendChild(th);
+            const td = document.createElement('td'); // 💡 th から td に変更して周りと統一
+            td.textContent = "チェック";
+            td.style.padding = "8px";
+            td.style.backgroundColor = "#eee";     // 💡 周りの薄いグレーに合わせる
+            td.style.whiteSpace = "nowrap";         // 💡 絶対に改行させない
+            td.style.verticalAlign = "middle";      // 💡 縦の位置を中央に揃える
+            td.style.textAlign = "center";          // 💡 文字を中央寄せにする
+            td.style.fontWeight = "bold";           // 💡 周りに合わせて太字にする
+            row.appendChild(td);
             isHeader = false;
             return;
         }
+
 
         // 問題が書かれている行に対する処理
         if (cells.length >= 3) {
