@@ -1,32 +1,35 @@
 // ページの読み込み完了時に要素を自動生成して実行
 window.addEventListener('DOMContentLoaded', () => {
-    // 1. 復習用ボタンとカードのHTMLを自動作成して body の先頭に挿入
+    // 1. 復習用ボタンとカードのHTMLを自動作成
     const container = document.createElement('div');
     container.innerHTML = `
-        <div style="text-align: center; margin: 20px 0; position: sticky; top: 10px; z-index: 1000;">
+        <!-- 💡 position: sticky を削除し、通常のボタンとして配置 -->
+        <div style="text-align: center; margin: 30px 0;">
             <button id="review-start-btn" style="padding: 12px 24px; font-size: 1.1rem; cursor: pointer; background-color: #e67e22; color: white; border: none; border-radius: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-weight: bold; display: none;">
                 ❌ 不正解の問題（<span id="wrong-count-display">0</span>問）を復習する
             </button>
         </div>
+        <!-- 復習画面（デザインはそのまま） -->
         <div id="review-screen" style="display: none; max-width: 500px; margin: 20px auto; padding: 20px; border: 2px solid #e67e22; border-radius: 10px; background-color: #fff9f4; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #ffebdc; padding-bottom: 5px; color: #e67e22;">
-                <span>弱点復習モード</span>
+                <span>🔥 弱点復習モード</span>
                 <div>残り <span id="review-index">1</span> / <span id="review-total">0</span> 問</div>
             </div>
             <div id="review-question" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px; min-height: 80px; color: #333;"></div>
             <div id="review-answer" style="display: none; font-size: 1.2rem; font-weight: bold; color: #d9534f; margin-bottom: 25px; min-height: 30px; padding: 10px; background-color: #fdf7f7; border-left: 5px solid #d9534f;"></div>
             <div style="text-align: center;">
-                <button id="review-show-btn" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #0275d8; color: white; border: none; border-radius: 4px;">答えを見る</button>
-                <button id="review-next-btn" style="display: none; padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #5cb85c; color: white; border: none; border-radius: 4px;">次の問題へ</button>
+                <button id="review-show-btn" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #0275d8; color: white; border: none; border-radius: 4px;">👁️ 答えを見る</button>
+                <button id="review-next-btn" style="display: none; padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #5cb85c; color: white; border: none; border-radius: 4px;">➡️ 次の問題へ</button>
             </div>
         </div>
     `;
-    document.body.insertBefore(container, document.body.firstChild);
+    // 💡 insertBefore ではなく appendChild に変更することで、ページの一番下（表の後ろ）に追加します
+    document.body.appendChild(container);
 
-    // イベント等の紐付けとテーブルボタンのセットアップ
     setupEventListeners();
     setupTableButtons();
 });
+
 
 let wrongList = [];
 let currentReviewIndex = 0;
