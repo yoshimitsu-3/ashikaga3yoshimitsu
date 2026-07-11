@@ -12,14 +12,14 @@ window.addEventListener('DOMContentLoaded', () => {
         <!-- 復習画面（デザインはそのまま） -->
         <div id="review-screen" style="display: none; max-width: 500px; margin: 20px auto; padding: 20px; border: 2px solid #e67e22; border-radius: 10px; background-color: #fff9f4; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #ffebdc; padding-bottom: 5px; color: #e67e22;">
-                <span>🔥 弱点復習モード</span>
+                <span>弱点復習モード</span>
                 <div>残り <span id="review-index">1</span> / <span id="review-total">0</span> 問</div>
             </div>
             <div id="review-question" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px; min-height: 80px; color: #333;"></div>
             <div id="review-answer" style="display: none; font-size: 1.2rem; font-weight: bold; color: #d9534f; margin-bottom: 25px; min-height: 30px; padding: 10px; background-color: #fdf7f7; border-left: 5px solid #d9534f;"></div>
             <div style="text-align: center;">
-                <button id="review-show-btn" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #0275d8; color: white; border: none; border-radius: 4px;">👁️ 答えを見る</button>
-                <button id="review-next-btn" style="display: none; padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #5cb85c; color: white; border: none; border-radius: 4px;">➡️ 次の問題へ</button>
+                <button id="review-show-btn" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #0275d8; color: white; border: none; border-radius: 4px;">答えを見る</button>
+                <button id="review-next-btn" style="display: none; padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #5cb85c; color: white; border: none; border-radius: 4px;">次の問題へ</button>
             </div>
         </div>
     `;
