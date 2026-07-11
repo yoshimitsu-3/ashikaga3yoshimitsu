@@ -143,126 +143,191 @@
     <br />
     <br />
     <script type="text/javascript" src="/printtest.js"></script>
-    <!-- テスト開始ボタン（画面の好きな場所に配置してください） -->
-<div style="text-align: center; margin: 20px;">
-    <button id="start-btn" style="padding: 12px 24px; font-size: 1.1rem; cursor: pointer; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">
-        🎲 このページの問題でテストを始める
+    <!-- 画面上部に配置する復習スタートボタン -->
+<div style="text-align: center; margin: 20px 0; position: sticky; top: 10px; z-index: 1000;">
+    <button id="review-start-btn" style="padding: 12px 24px; font-size: 1.1rem; cursor: pointer; background-color: #e67e22; color: white; border: none; border-radius: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); font-weight: bold; display: none;">
+        ❌ 不正解の問題（<span id="wrong-count-display">0</span>問）を復習する
     </button>
 </div>
 
-<!-- テスト画面（初期状態は非表示） -->
-<div id="test-screen" style="display: none; max-width: 500px; margin: 20px auto; padding: 20px; border: 2px solid #333; border-radius: 10px; background-color: #f9f9f9; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px;">
-        <span>📝 テストモード</span>
-        <div>質問 <span id="current-index">1</span> / <span id="total-questions">0</span></div>
+<!-- 復習用の1問一答カード（初期状態は非表示） -->
+<div id="review-screen" style="display: none; max-width: 500px; margin: 20px auto; padding: 20px; border: 2px solid #e67e22; border-radius: 10px; background-color: #fff9f4; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-weight: bold; border-bottom: 1px solid #ffebdc; padding-bottom: 5px; color: #e67e22;">
+        <span>🔥 弱点復習モード</span>
+        <div>残り <span id="review-index">1</span> / <span id="review-total">0</span> 問</div>
     </div>
-    <div id="question-text" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px; min-height: 80px; color: #333;"></div>
-    <div id="answer-text" style="display: none; font-size: 1.2rem; font-weight: bold; color: #d9534f; margin-bottom: 25px; min-height: 30px; padding: 10px; background-color: #fdf7f7; border-left: 5px solid #d9534f;"></div>
+    <div id="review-question" style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px; min-height: 80px; color: #333;"></div>
+    <div id="review-answer" style="display: none; font-size: 1.2rem; font-weight: bold; color: #d9534f; margin-bottom: 25px; min-height: 30px; padding: 10px; background-color: #fdf7f7; border-left: 5px solid #d9534f;"></div>
     
     <div style="text-align: center;">
-        <button id="show-answer-btn" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #0275d8; color: white; border: none; border-radius: 4px;">👁️ 答えを見る</button>
-        <button id="next-btn" style="display: none; padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #5cb85c; color: white; border: none; border-radius: 4px;">➡️ 次の問題へ</button>
+        <button id="review-show-btn" style="padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #0275d8; color: white; border: none; border-radius: 4px;">👁️ 答えを見る</button>
+        <button id="review-next-btn" style="display: none; padding: 10px 20px; font-size: 1rem; cursor: pointer; background-color: #5cb85c; color: white; border: none; border-radius: 4px;">➡️ 次の問題へ</button>
     </div>
 </div>
 
 <script>
-// グローバル変数の定義
-let quizData = [];
-let shuffledQuestions = [];
-let currentQuestionIndex = 0;
+// 状態管理用の配列
+let wrongList = [];
+let currentReviewIndex = 0;
 
-// 要素の取得
-const startBtn = document.getElementById('start-btn');
-const testScreen = document.getElementById('test-screen');
-const questionText = document.getElementById('question-text');
-const answerText = document.getElementById('answer-text');
-const showAnswerBtn = document.getElementById('show-answer-btn');
-const nextBtn = document.getElementById('next-btn');
-const currentIndexSpan = document.getElementById('current-index');
-const totalQuestionsSpan = document.getElementById('total-questions');
-
-// 【重要】既存のHTMLテーブルからデータを自動抽出する関数
-function tableToQuizData() {
-    const data = [];
-    // 画面上のすべてのテーブルの「行(tr)」を取得
-    const rows = document.querySelectorAll('table tr');
-    
-    rows.forEach(row => {
-        const cells = row.querySelectorAll('td');
-        // 番号、問題、解答の3つのセル（列）がある行だけを対象にする
-        if (cells.length >= 3) {
-            // 2番目のセル（問題）と3番目のセル（解答）のテキストを取得
-            // 前後の不要な空白や改行をtrim()で削除
-            const qText = cells[1].textContent.trim();
-            const aText = cells[2].textContent.trim();
-            
-            // ヘッダー行（「問題」「解答」という文字自体）を除外して配列に追加
-            if (qText !== "問題" && qText !== "") {
-                data.push({ q: qText, a: aText });
-            }
-        }
-    });
-    return data;
-}
-
-// テスト開始ボタンのクリックイベント
-startBtn.addEventListener('click', () => {
-    // テーブルからデータをその場で読み込む
-    quizData = tableToQuizData();
-    
-    // 問題が取得できなかった場合の安全対策
-    if (quizData.length === 0) {
-        alert('問題データが見つかりませんでした。テーブルの構造を確認してください。');
-        return;
-    }
-    
-    // 配列をシャッフル（フィッシャー・イェーツのシャッフル）
-    shuffledQuestions = [...quizData].sort(() => Math.random() - 0.5);
-    currentQuestionIndex = 0;
-    totalQuestionsSpan.textContent = shuffledQuestions.length;
-    
-    // 画面の切り替え
-    startBtn.style.display = 'none';
-    testScreen.style.display = 'block';
-    
-    // 元のテーブルを隠したい場合は以下を有効にしてください（任意）
-    // document.querySelector('table').style.display = 'none';
-    
-    showQuestion();
+// ページの読み込みが完了したら実行
+window.addEventListener('DOMContentLoaded', () => {
+    setupTableButtons();
 });
 
-// 問題を表示する関数
-function showQuestion() {
-    const currentQuestion = shuffledQuestions[currentQuestionIndex];
-    currentIndexSpan.textContent = currentQuestionIndex + 1;
-    questionText.textContent = currentQuestion.q;
-    answerText.textContent = currentQuestion.a;
+// 1. 既存の表（テーブル）の各行に「正解」「不正解」ボタンを自動追加する関数
+function setupTableButtons() {
+    const rows = document.querySelectorAll('table tr');
+    let isHeader = true;
+
+    rows.forEach((row, index) => {
+        const cells = row.querySelectorAll('td');
+        
+        // ヘッダー行（「番号」「問題」「解答」）には「状態」という見出し列を追加
+        if (isHeader && cells.length >= 3) {
+            const th = document.createElement('th');
+            th.textContent = "チェック";
+            th.style.padding = "8px";
+            th.style.backgroundColor = "#eee";
+            row.appendChild(th);
+            isHeader = false;
+            return;
+        }
+
+        // 問題が書かれている行に対する処理
+        if (cells.length >= 3) {
+            const qText = cells[1].textContent.trim();
+            const aText = cells[2].textContent.trim();
+
+            if (qText === "問題" || qText === "") return;
+
+            // ボタンを入れる新しいセル（列）を作成
+            const actionCell = document.createElement('td');
+            actionCell.style.textAlign = "center";
+            actionCell.style.padding = "5px";
+            actionCell.style.whiteSpace = "nowrap";
+
+            // 「⭕」ボタン
+            const cBtn = document.createElement('button');
+            cBtn.textContent = "⭕";
+            cBtn.style.cssText = "margin-right:5px; cursor:pointer; padding:4px 8px; background:#fff; border:1px solid #ccc; border-radius:3px;";
+            
+            // 「❌」ボタン
+            const wBtn = document.createElement('button');
+            wBtn.textContent = "❌";
+            wBtn.style.cssText = "cursor:pointer; padding:4px 8px; background:#fff; border:1px solid #ccc; border-radius:3px;";
+
+            // ボタンをクリックした時の挙動
+            cBtn.addEventListener('click', () => {
+                row.style.backgroundColor = "#e8f8f5"; // 正解は薄い緑
+                cBtn.style.background = "#5cb85c";
+                cBtn.style.color = "#fff";
+                wBtn.style.background = "#fff";
+                wBtn.style.color = "#000";
+                removeFromWrongList(qText);
+            });
+
+            wBtn.addEventListener('click', () => {
+                row.style.backgroundColor = "#fdf2f2"; // 不正解は薄い赤
+                wBtn.style.background = "#d9534f";
+                wBtn.style.color = "#fff";
+                cBtn.style.background = "#fff";
+                cBtn.style.color = "#000";
+                addToWrongList(qText, aText);
+            });
+
+            actionCell.appendChild(cBtn);
+            actionCell.appendChild(wBtn);
+            row.appendChild(actionCell);
+        }
+    });
+}
+
+// 不正解リストに追加する関数
+function addToWrongList(q, a) {
+    if (!wrongList.some(item => item.q === q)) {
+        wrongList.push({ q, a });
+    }
+    updateReviewButton();
+}
+
+// 不正解リストから削除する関数
+function removeFromWrongList(q) {
+    wrongList = wrongList.filter(item => item.q !== q);
+    updateReviewButton();
+}
+
+// 画面上の「復習する」ボタンの表示を更新する関数
+function updateReviewButton() {
+    const btn = document.getElementById('review-start-btn');
+    const countSpan = document.getElementById('wrong-count-display');
+    countSpan.textContent = wrongList.length;
     
-    // ボタンや解答の表示初期化
-    answerText.style.display = 'none';
-    showAnswerBtn.style.display = 'inline-block';
-    nextBtn.style.display = 'none';
+    // 1問でも不正解があれば上部に復習ボタンを表示する
+    if (wrongList.length > 0) {
+        btn.style.display = 'inline-block';
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+// 2. 復習モードの開始処理
+const reviewStartBtn = document.getElementById('review-start-btn');
+const reviewScreen = document.getElementById('review-screen');
+const mainTable = document.querySelector('table');
+
+reviewStartBtn.addEventListener('click', () => {
+    currentReviewIndex = 0;
+    
+    // 不正解リストをさらにランダムにシャッフル
+    wrongList.sort(() => Math.random() - 0.5);
+    
+    document.getElementById('review-total').textContent = wrongList.length;
+    
+    // 表を隠して、復習カードを表示する
+    mainTable.style.display = 'none';
+    reviewStartBtn.style.display = 'none';
+    reviewScreen.style.display = 'block';
+    
+    showReviewQuestion();
+});
+
+// 復習問題の表示
+function showReviewQuestion() {
+    const current = wrongList[currentReviewIndex];
+    document.getElementById('review-index').textContent = currentReviewIndex + 1;
+    document.getElementById('review-question').textContent = current.q;
+    document.getElementById('review-answer').textContent = current.a;
+    
+    document.getElementById('review-answer').style.display = 'none';
+    document.getElementById('review-show-btn').style.display = 'inline-block';
+    document.getElementById('review-next-btn').style.display = 'none';
 }
 
 // 「答えを見る」ボタン
-showAnswerBtn.addEventListener('click', () => {
-    answerText.style.display = 'block';
-    showAnswerBtn.style.display = 'none';
-    nextBtn.style.display = 'inline-block';
+document.getElementById('review-show-btn').addEventListener('click', () => {
+    document.getElementById('review-answer').style.display = 'block';
+    document.getElementById('review-show-btn').style.display = 'none';
+    document.getElementById('review-next-btn').style.display = 'inline-block';
 });
 
 // 「次の問題へ」ボタン
-nextBtn.addEventListener('click', () => {
-    currentQuestionIndex++;
-    if (currentQuestionIndex < shuffledQuestions.length) {
-        showQuestion();
+document.getElementById('review-next-btn').addEventListener('click', () => {
+    currentReviewIndex++;
+    if (currentReviewIndex < wrongList.length) {
+        showReviewQuestion();
     } else {
-        alert('テスト終了です！お疲れ様でした。');
-        // 初期状態に戻す
-        testScreen.style.display = 'none';
-        startBtn.style.display = 'inline-block';
-        // 元のテーブルを隠していた場合はここで再表示する
-        // document.querySelector('table').style.display = 'table';
+        alert('不正解の復習がすべて完了しました！元の表に戻ります。');
+        // 初期状態（テーブル表示）に戻す
+        reviewScreen.style.display = 'none';
+        mainTable.style.display = 'table';
+        
+        // 復習が終わったのでリストを空にしてボタンを隠す
+        wrongList = [];
+        updateReviewButton();
+        
+        // テーブルの色とボタンの選択状態をリセットしたい場合はリロード
+        location.reload();
     }
 });
 </script>
